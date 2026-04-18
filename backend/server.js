@@ -9,7 +9,7 @@ const app = express();
 // 1. Configurar CORS profissional
 // Isso permite que seu front na Vercel e seu teste local acessem a API
 app.use(cors({
-  origin: '*', // Em produção, você pode substituir '*' pela URL da Vercel para mais segurança
+  origin: '*', // Permite que qualquer dispositivo (celular, PC, tablet) acesse
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
