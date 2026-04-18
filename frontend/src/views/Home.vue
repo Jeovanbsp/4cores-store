@@ -2,7 +2,6 @@
   <div class="home">
     <Notification :message="toastMsg" :type="toastType" v-model:show="showToast" />
     
-    <!-- ZOOM -->
     <Transition name="fade">
       <div v-if="zoomedImage" class="zoom-overlay" @click="zoomedImage = null">
         <div class="zoom-content" @click.stop>
@@ -12,12 +11,11 @@
       </div>
     </Transition>
 
-    <!-- LOGIN -->
     <Transition name="fade">
       <div v-if="showLoginModal" class="login-overlay">
         <div class="login-card">
           <div class="login-header">
-            <LockIcon :size="28" color="#E30613" />
+            <LockIcon :size="32" color="#E30613" />
             <h2>Acesso Restrito</h2>
             <p>Gerenciamento da Loja 4Cores</p>
           </div>
@@ -31,24 +29,22 @@
             />
             <div class="login-actions">
               <button type="button" @click="showLoginModal = false" class="btn-cancel-login">Cancelar</button>
-              <button type="submit" class="btn-auth">Entrar</button>
+              <button type="submit" class="btn-auth">Acessar Painel</button>
             </div>
           </form>
         </div>
       </div>
     </Transition>
 
-    <!-- HEADER -->
     <header class="header-main">
-      <img src="../assets/4cores.png" class="main-logo" @dblclick="showLoginModal = true">
+      <img src="../assets/4cores.png" alt="Logo 4Cores" class="main-logo" @dblclick="showLoginModal = true">
       
       <div class="search-wrapper">
         <SearchIcon class="icon-search" />
-        <input type="text" v-model="search" placeholder="Buscar..." class="search-bar" />
+        <input type="text" v-model="search" placeholder="Busque um personagem ou tema..." class="search-bar" />
       </div>
     </header>
 
-    <!-- FILTROS -->
     <section class="filter-controls">
       <div class="main-filters">
         <button :class="{ active: filter === 'todos' }" @click="filter = 'todos'">Todos</button>
@@ -58,16 +54,24 @@
 
       <div class="topics-wrapper">
         <button class="btn-topics-menu" @click="showTopicsMenu = !showTopicsMenu">
-          <LayoutGridIcon :size="16" />
-          <span>{{ selectedTopic === 'todos' ? 'Tópicos' : selectedTopic }}</span>
-          <ChevronDownIcon :size="14" :class="{ rotate: showTopicsMenu }" />
+          <LayoutGridIcon :size="18" />
+          <span>{{ selectedTopic === 'todos' ? 'Explorar Tópicos' : selectedTopic }}</span>
+          <ChevronDownIcon :size="16" :class="{ rotate: showTopicsMenu }" />
         </button>
 
         <Transition name="slide-up">
           <div v-if="showTopicsMenu" class="topics-dropdown">
-            <button @click="selectedTopic = 'todos'; showTopicsMenu = false">Todos</button>
-            <button v-for="t in availableTopics" :key="t"
-              @click="selectedTopic = t; showTopicsMenu = false">
+            <button 
+              :class="{ active: selectedTopic === 'todos' }" 
+              @click="selectedTopic = 'todos'; showTopicsMenu = false"
+            >
+              Todos os Itens
+            </button>
+            <button 
+              v-for="t in availableTopics" :key="t" 
+              :class="{ active: selectedTopic === t }"
+              @click="selectedTopic = t; showTopicsMenu = false"
+            >
               {{ t }}
             </button>
           </div>
@@ -75,8 +79,7 @@
       </div>
     </section>
 
-    <!-- PRODUTOS -->
-    <div v-if="filteredProducts.length" class="product-grid">
+    <div v-if="filteredProducts.length > 0" class="product-grid">
       <ProductCard 
         v-for="p in filteredProducts" 
         :key="p._id" 
@@ -85,205 +88,188 @@
         @zoom-image="openZoom"
       />
     </div>
-
+    
     <div v-else class="no-results">
       <PackageSearchIcon class="icon-big" />
-      <p>Nenhum item encontrado</p>
+      <p>Nenhum item encontrado.</p>
     </div>
 
-    <!-- FEEDBACK -->
-    <section class="testimonials" v-if="feedbacks.length">
-      <h3>Clientes</h3>
+    <section class="testimonials" v-if="feedbacks.length > 0">
+      <h3>O que nossos clientes dizem</h3>
       <div class="testimonial-slider">
         <div v-for="f in feedbacks" :key="f._id" class="testimonial-card">
           <div class="stars-row">
             <StarIcon v-for="i in (f.stars || 5)" :key="i" class="icon-star-fill" />
           </div>
-          <p>"{{ f.text || f.comment }}"</p>
-          <span>{{ f.name || f.user }}</span>
+          <p class="feedback-text">"{{ f.text || f.comment || f.depoimento }}"</p>
+          <span class="client-name">{{ f.name || f.user || f.cliente }}</span>
         </div>
       </div>
     </section>
 
-    <!-- CARRINHO -->
     <CartModal :cartItems="cart" :isOpen="showCart" @close="showCart = false" />
     <button class="cart-toggle" @click="showCart = !showCart">
       <ShoppingCartIcon />
-      <span v-if="cart.length" class="cart-count">{{ cart.length }}</span>
+      <span v-if="cart.length > 0" class="cart-count">{{ cart.length }}</span>
     </button>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import axios from 'axios'
-import {
-  SearchIcon, ShoppingCartIcon, StarIcon,
-  PackageSearchIcon, LockIcon, ChevronDownIcon, LayoutGridIcon
-} from 'lucide-vue-next'
+import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import axios from 'axios';
+import { 
+  SearchIcon, ShoppingCartIcon, StarIcon, PackageSearchIcon, 
+  LockIcon, ChevronDownIcon, LayoutGridIcon 
+} from 'lucide-vue-next';
 
-import ProductCard from '../components/ProductCard.vue'
-import CartModal from '../components/CartModal.vue'
-import Notification from '../components/Notification.vue'
+import ProductCard from '../components/ProductCard.vue';
+import CartModal from '../components/CartModal.vue';
+import Notification from '../components/Notification.vue';
 
-const API_URL = "http://localhost:5000/api"
+const router = useRouter();
+const API_URL = "http://localhost:5000/api";
 
-const products = ref([])
-const feedbacks = ref([])
-const search = ref('')
-const filter = ref('todos')
-const selectedTopic = ref('todos')
-const showTopicsMenu = ref(false)
-const zoomedImage = ref(null)
-const cart = ref([])
-const showCart = ref(false)
-const showLoginModal = ref(false)
-const passwordInput = ref('')
-const showToast = ref(false)
-const toastMsg = ref('')
-const toastType = ref('error')
+// Estados Reativos
+const products = ref([]);
+const feedbacks = ref([]);
+const search = ref('');
+const filter = ref('todos');
+const selectedTopic = ref('todos');
+const showTopicsMenu = ref(false);
+const zoomedImage = ref(null);
+const cart = ref([]);
+const showCart = ref(false);
+const showLoginModal = ref(false);
+const passwordInput = ref('');
+const showToast = ref(false);
+const toastMsg = ref('');
+const toastType = ref('error');
 
-const openZoom = (url) => zoomedImage.value = url
+const openZoom = (url) => { zoomedImage.value = url; };
 
+// Tópicos baseados nos produtos que não estão ocultos
 const availableTopics = computed(() => {
-  return [...new Set(products.value.map(p => p.topic).filter(Boolean))]
-})
+  const topics = products.value
+    .filter(p => p.visible !== false)
+    .map(p => p.topic)
+    .filter(t => t && t.trim() !== "");
+  return [...new Set(topics)];
+});
+
+const notify = (msg, type = 'error') => {
+  toastMsg.value = msg;
+  toastType.value = type;
+  showToast.value = true;
+  setTimeout(() => showToast.value = false, 3000);
+};
+
+const fetchData = async () => {
+  try {
+    const [pRes, fRes] = await Promise.all([
+      axios.get(`${API_URL}/products`),
+      axios.get(`${API_URL}/feedbacks`)
+    ]);
+    products.value = pRes.data;
+    feedbacks.value = fRes.data;
+  } catch (err) {
+    console.error("Erro ao carregar dados", err);
+  }
+};
 
 const filteredProducts = computed(() => {
   return products.value.filter(p => {
-    return (
-      p.visible !== false &&
-      p.name?.toLowerCase().includes(search.value.toLowerCase()) &&
-      (filter.value === 'todos' || p.category === filter.value) &&
-      (selectedTopic.value === 'todos' || p.topic === selectedTopic.value)
-    )
-  })
-})
+    const isVisible = p.visible !== false;
+    const matchesSearch = p.name?.toLowerCase().includes(search.value.toLowerCase());
+    const matchesFilter = filter.value === 'todos' || p.category === filter.value;
+    const matchesTopic = selectedTopic.value === 'todos' || p.topic === selectedTopic.value;
+    return isVisible && matchesSearch && matchesFilter && matchesTopic;
+  });
+});
 
 const addToCart = (product) => {
-  if (product.stock <= 0) return
-  const existing = cart.value.find(i => i._id === product._id)
-  if (existing) existing.quantity++
-  else cart.value.push({ ...product, quantity: 1 })
-  showCart.value = true
-}
+  if (product.stock <= 0) {
+    notify("Item esgotado!");
+    return;
+  }
+  const existing = cart.value.find(item => item._id === product._id);
+  if (existing) {
+    if (existing.quantity < product.stock) {
+      existing.quantity++;
+      showCart.value = true;
+    } else {
+      notify("Limite de estoque atingido");
+    }
+  } else {
+    cart.value.push({ ...product, quantity: 1 });
+    showCart.value = true;
+  }
+};
 
-onMounted(async () => {
-  const [p, f] = await Promise.all([
-    axios.get(`${API_URL}/products`),
-    axios.get(`${API_URL}/feedbacks`)
-  ])
-  products.value = p.data
-  feedbacks.value = f.data
-})
+onMounted(fetchData);
 </script>
 
 <style scoped>
-* { box-sizing: border-box; }
+.home { max-width: 1200px; margin: 0 auto; padding: 20px; font-family: 'Inter', sans-serif; }
 
-.home {
-  max-width: 1200px;
-  margin: auto;
-  padding: 15px;
-}
+/* Cabeçalho */
+.header-main { text-align: center; margin-bottom: 30px; }
+.main-logo { width: 200px; margin-bottom: 20px; cursor: pointer; }
+.search-wrapper { position: relative; max-width: 500px; margin: 0 auto; }
+.icon-search { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
+.search-bar { width: 100%; padding: 15px 15px 15px 45px; border-radius: 30px; border: 1px solid #e2e8f0; font-size: 1rem; }
 
-/* HEADER */
-.header-main {
-  text-align: center;
-}
+/* Filtros e Menu de Tópicos */
+.filter-controls { display: flex; flex-direction: column; align-items: center; gap: 15px; margin-bottom: 40px; }
+.main-filters { display: flex; gap: 10px; }
+.main-filters button { padding: 10px 24px; border-radius: 25px; border: 1px solid #eee; background: white; cursor: pointer; font-weight: 600; color: #666; }
+.main-filters button.active { background: #E30613; color: white; border-color: #E30613; }
 
-.main-logo {
-  width: 140px;
-}
+.topics-wrapper { position: relative; }
+.btn-topics-menu { display: flex; align-items: center; gap: 10px; padding: 12px 25px; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 15px; font-weight: 700; color: #1e293b; cursor: pointer; }
+.btn-topics-menu:hover { border-color: #E30613; background: white; }
+.rotate { transform: rotate(180deg); transition: 0.3s; }
 
-.search-wrapper {
-  position: relative;
-  margin-top: 10px;
-}
+.topics-dropdown { position: absolute; top: 120%; left: 50%; transform: translateX(-50%); background: white; min-width: 220px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); padding: 10px; z-index: 2000; display: flex; flex-direction: column; gap: 5px; }
+.topics-dropdown button { padding: 12px; text-align: left; border: none; background: none; border-radius: 8px; cursor: pointer; font-weight: 600; color: #475569; }
+.topics-dropdown button.active { background: #fef2f2; color: #E30613; }
 
-.icon-search {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-}
+/* Grid */
+.product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 25px; }
 
-.search-bar {
-  width: 100%;
-  padding: 12px 12px 12px 38px;
-  border-radius: 25px;
-}
+/* Zoom */
+.zoom-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 5000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
+.zoomed-image { max-width: 90%; max-height: 85vh; border-radius: 10px; }
+.close-zoom { position: absolute; top: 20px; right: 20px; color: white; background: none; border: none; font-size: 40px; cursor: pointer; }
 
-/* FILTROS */
-.main-filters {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-  margin: 15px 0;
-}
+/* Feedbacks */
+.testimonials { margin-top: 60px; text-align: center; }
+.testimonial-slider { display: flex; overflow-x: auto; gap: 20px; padding: 20px; scrollbar-width: none; }
+.testimonial-card { min-width: 280px; background: white; padding: 20px; border-radius: 15px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+.stars-row { display: flex; justify-content: center; gap: 4px; margin-bottom: 10px; }
+.icon-star-fill { color: #FFB800; fill: #FFB800; width: 16px; }
+.feedback-text { font-style: italic; color: #475569; margin-bottom: 10px; }
+.client-name { font-weight: bold; color: #1e293b; }
 
-.main-filters button {
-  padding: 8px 14px;
-}
+/* Carrinho */
+.cart-toggle { position: fixed; bottom: 30px; right: 30px; background: #E30613; color: white; border: none; border-radius: 50%; width: 60px; height: 60px; cursor: pointer; z-index: 1000; box-shadow: 0 5px 15px rgba(227,6,19,0.3); }
+.cart-count { position: absolute; top: 0; right: 0; background: #008D36; width: 22px; height: 22px; border-radius: 50%; font-size: 11px; display: flex; align-items: center; justify-content: center; border: 2px solid white; }
 
-.topics-dropdown {
-  width: 100%;
-}
+/* Login Modal */
+.login-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 6000; display: flex; align-items: center; justify-content: center; }
+.login-card { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; }
+.admin-input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; margin: 20px 0; font-size: 1.1rem; text-align: center; }
+.login-actions { display: flex; gap: 10px; }
+.btn-auth { flex: 1; padding: 12px; background: #E30613; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; }
+.btn-cancel-login { flex: 1; padding: 12px; background: #f1f5f9; border-radius: 10px; border: none; cursor: pointer; }
 
-/* GRID */
-.product-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-}
+.no-results { text-align: center; padding: 50px; color: #94a3b8; }
+.icon-big { width: 60px; height: 60px; margin-bottom: 10px; }
 
-@media (min-width: 768px) {
-  .product-grid {
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  }
-}
-
-/* ZOOM */
-.zoom-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.9);
-}
-
-.zoomed-image {
-  max-width: 95%;
-  max-height: 70vh;
-}
-
-/* TESTIMONIAL */
-.testimonial-slider {
-  display: flex;
-  overflow-x: auto;
-  gap: 10px;
-}
-
-.testimonial-card {
-  min-width: 240px;
-}
-
-/* CARRINHO */
-.cart-toggle {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 50px;
-  height: 50px;
-}
-
-/* LOGIN */
-.login-card {
-  width: 95%;
-}
-
-/* NO RESULT */
-.no-results {
-  text-align: center;
-  margin-top: 30px;
-}
+/* Animations */
+.fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+.slide-up-enter-active { transition: all 0.3s ease-out; }
+.slide-up-enter-from { opacity: 0; transform: translate(-50%, 15px); }
 </style>

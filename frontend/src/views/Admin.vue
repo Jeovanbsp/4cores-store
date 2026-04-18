@@ -377,4 +377,4 @@ onMounted(async () => {
   margin-top: 20px;
   font-size: 0.9rem;
 }
-</style>    
+</style>
