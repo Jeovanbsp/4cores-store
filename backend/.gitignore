@@ -1,0 +1,10 @@
+# Dependências
+node_modules/
+dist/
+
+# Segurança (CRÍTICO)
+.env
+.env.local
+
+# Outros
+.DS_Store
