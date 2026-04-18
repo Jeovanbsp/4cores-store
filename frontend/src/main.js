@@ -9,7 +9,20 @@ import Admin from './views/Admin.vue'
 // Configurando as rotas
 const routes = [
   { path: '/', component: Home },
-  { path: '/admin', component: Admin }
+  { 
+    path: '/admin', 
+    component: Admin,
+    // Essa função impede que entrem no /admin sem o token
+    beforeEnter: (to, from, next) => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        next(); // Tem token? Pode entrar.
+      } else {
+        next('/'); // Não tem? Chuta de volta pra Home.
+        // O modal de login vai abrir porque o botão da Navbar já controla isso no App.vue
+      }
+    }
+  }
 ]
 
 const router = createRouter({
@@ -18,5 +31,5 @@ const router = createRouter({
 })
 
 const app = createApp(App)
-app.use(router) // Ativa as rotas no Vue
+app.use(router) 
 app.mount('#app')

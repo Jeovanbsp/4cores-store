@@ -165,16 +165,6 @@ const notify = (msg, type = 'error') => {
   setTimeout(() => showToast.value = false, 3000);
 };
 
-const handleLogin = () => {
-  if (passwordInput.value === 'admin4cores') {
-    localStorage.setItem('admin_auth', 'true');
-    router.push('/admin');
-  } else {
-    notify("Senha incorreta!");
-    passwordInput.value = '';
-  }
-};
-
 const fetchData = async () => {
   try {
     const [pRes, fRes] = await Promise.all([

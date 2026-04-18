@@ -13,7 +13,7 @@
         <div class="login-card">
           <div class="login-header">
             <div class="icon-backdrop">
-              <LockIcon :size="24" />
+              <span style="font-size: 20px; font-weight: bold;">4C</span>
             </div>
             <h2>Acesso Restrito</h2>
             <p>Gerenciamento da Loja 4Cores</p>
@@ -21,12 +21,12 @@
           
           <form @submit.prevent="handleLogin" class="login-form">
             <div class="input-wrapper">
-              <KeyRoundIcon class="input-icon" :size="18" />
               <input 
                 v-model="passwordInput" 
                 type="password" 
                 placeholder="Senha administrativa" 
                 class="modern-input"
+                style="padding-left: 15px;" 
                 required 
                 autofocus
               />
@@ -34,7 +34,9 @@
             
             <div class="login-actions">
               <button type="button" @click="showLoginModal = false" class="btn-cancel-glass">Cancelar</button>
-              <button type="submit" class="btn-auth-solid">Acessar Painel</button>
+              <button type="submit" class="btn-auth-solid" :disabled="loading">
+                {{ loading ? 'Conectando...' : 'Acessar Painel' }}
+              </button>
             </div>
           </form>
         </div>
@@ -71,13 +73,12 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import axios from 'axios'
 import Navbar from './components/Navbar.vue'
 import Notification from './components/Notification.vue'
 import { 
   InstagramIcon, 
-  MessageCircleIcon, 
-  LockIcon, 
-  KeyRoundIcon 
+  MessageCircleIcon 
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -86,6 +87,7 @@ const passwordInput = ref('')
 const showToast = ref(false)
 const toastMsg = ref('')
 const toastType = ref('error')
+const loading = ref(false)
 
 const notify = (msg, type = 'error') => {
   toastMsg.value = msg
@@ -93,23 +95,33 @@ const notify = (msg, type = 'error') => {
   showToast.value = true
 }
 
-const handleLogin = () => {
-  const securePass = import.meta.env.VITE_ADMIN_PASSWORD
-  if (passwordInput.value === securePass) {
-    localStorage.setItem('admin_auth', 'true')
-    showLoginModal.value = false
+const handleLogin = async () => {
+  loading.value = true
+  try {
+    // Comunicação real com o backend seguro
+    const res = await axios.post('http://localhost:5000/api/auth/login', {
+      username: 'admin',
+      password: passwordInput.value
+    })
+
+    if (res.data.token) {
+      localStorage.setItem('token', res.data.token)
+      showLoginModal.value = false
+      passwordInput.value = ''
+      notify("Bem-vindo de volta!", "success")
+      router.push('/admin')
+    }
+  } catch (err) {
+    notify("Senha incorreta. Acesso negado.")
     passwordInput.value = ''
-    notify("Acesso autorizado!", "success")
-    router.push('/admin')
-  } else {
-    notify("Senha incorreta. Tente novamente.")
-    passwordInput.value = ''
+  } finally {
+    loading.value = false
   }
 }
 </script>
 
 <style>
-/* 1. ESTILOS GLOBAIS (Seu padrão) */
+/* Reset e Base */
 * { box-sizing: border-box; }
 
 body {
@@ -121,7 +133,7 @@ body {
 
 main { min-height: 80vh; padding-bottom: 50px; }
 
-/* 2. MODAL DE LOGIN (Correção do vácuo/vazamento) */
+/* Modal e Overlay */
 .login-overlay {
   position: fixed;
   inset: 0;
@@ -139,7 +151,7 @@ main { min-height: 80vh; padding-bottom: 50px; }
   padding: 30px;
   border-radius: 24px;
   width: 100%;
-  max-width: 360px; /* Garante que o card não estique demais */
+  max-width: 360px;
   text-align: center;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 }
@@ -159,28 +171,21 @@ main { min-height: 80vh; padding-bottom: 50px; }
 .login-header h2 { font-weight: 800; font-size: 1.4rem; color: #111827; margin: 0; }
 .login-header p { color: #6b7280; font-size: 0.9rem; margin: 5px 0 25px; }
 
-/* O segredo para o input não vazar está aqui: width 100% + box-sizing */
+/* Formulário */
 .input-wrapper {
   position: relative;
   width: 100%; 
   margin-bottom: 20px;
 }
 
-.input-icon {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #9ca3af;
-}
-
 .modern-input {
   width: 100%; 
-  padding: 14px 14px 14px 45px;
+  padding: 14px;
   border: 1.5px solid #e5e7eb;
   border-radius: 12px;
   font-size: 1rem;
   background: #fdfdfd;
+  transition: all 0.2s;
 }
 
 .modern-input:focus {
@@ -204,6 +209,7 @@ main { min-height: 80vh; padding-bottom: 50px; }
 }
 
 .btn-auth-solid:hover { background: #b3050f; }
+.btn-auth-solid:disabled { background: #ccc; cursor: not-allowed; }
 
 .btn-cancel-glass {
   flex: 1;
@@ -216,7 +222,7 @@ main { min-height: 80vh; padding-bottom: 50px; }
   cursor: pointer;
 }
 
-/* 3. SEU FOOTER ORIGINAL (Estilos preservados) */
+/* Footer */
 .footer {
   background: white;
   padding: 40px 20px;
@@ -224,7 +230,9 @@ main { min-height: 80vh; padding-bottom: 50px; }
   text-align: center;
   font-size: 0.9rem;
 }
+
 .footer-content p { margin: 5px 0; }
+
 .socials { 
   margin: 20px 0; 
   display: flex; 
@@ -232,6 +240,7 @@ main { min-height: 80vh; padding-bottom: 50px; }
   gap: 25px; 
   flex-wrap: wrap;
 }
+
 .social-link { 
   display: flex;
   align-items: center;
@@ -241,15 +250,18 @@ main { min-height: 80vh; padding-bottom: 50px; }
   font-weight: 600; 
   transition: color 0.3s ease;
 }
+
 .social-link:hover { color: #008D36; }
+
 .lucide-icon { width: 18px; height: 18px; }
+
 .copyright { 
   font-size: 0.75rem; 
   color: #999; 
   margin-top: 25px !important; 
 }
 
-/* Animação do Modal */
-.fade-enter-active, .fade-leave-active { transition: opacity 0.3s; }
+/* Transições */
+.fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>
