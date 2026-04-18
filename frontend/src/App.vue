@@ -99,7 +99,7 @@ const handleLogin = async () => {
   loading.value = true
   try {
     // Comunicação real com o backend seguro
-    const res = await axios.post('http://localhost:5000/api/auth/login', {
+    const res = await axios.post('https://fourcores-api.onrender.com/api/auth/login', {
       username: 'admin',
       password: passwordInput.value
     })
