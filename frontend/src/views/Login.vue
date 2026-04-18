@@ -40,6 +40,7 @@
 import { ref } from 'vue';
 import axios from 'axios';
 import { useRouter } from 'vue-router';
+import { API_URL } from '../config';
 
 const username = ref('');
 const password = ref('');
@@ -52,7 +53,7 @@ const handleLogin = async () => {
   error.value = '';
   
   try {
-    const res = await axios.post('http://localhost:5000/api/auth/login', {
+    const res = await axios.post(`${API_URL}/auth/login`, {
       username: username.value,
       password: password.value
     });

@@ -127,9 +127,9 @@ import {
 import ProductCard from '../components/ProductCard.vue';
 import CartModal from '../components/CartModal.vue';
 import Notification from '../components/Notification.vue';
+import { API_URL } from '../config';
 
 const router = useRouter();
-const API_URL = "http://localhost:5000/api";
 
 // Estados Reativos
 const products = ref([]);
@@ -211,11 +211,19 @@ onMounted(fetchData);
 </script>
 
 <style scoped>
-.home { max-width: 1200px; margin: 0 auto; padding: 20px; font-family: 'Inter', sans-serif; }
+.home { max-width: 1200px; margin: 0 auto; padding: 16px; font-family: 'Inter', sans-serif; }
+
+@media (min-width: 640px) {
+  .home { padding: 20px; }
+}
 
 /* Cabeçalho */
 .header-main { text-align: center; margin-bottom: 30px; }
-.main-logo { width: 200px; margin-bottom: 20px; cursor: pointer; }
+.main-logo { width: 140px; margin-bottom: 16px; cursor: pointer; }
+
+@media (min-width: 640px) {
+  .main-logo { width: 200px; margin-bottom: 20px; }
+}
 .search-wrapper { position: relative; max-width: 500px; margin: 0 auto; }
 .icon-search { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; }
 .search-bar { width: 100%; padding: 15px 15px 15px 45px; border-radius: 30px; border: 1px solid #e2e8f0; font-size: 1rem; }
@@ -236,7 +244,11 @@ onMounted(fetchData);
 .topics-dropdown button.active { background: #fef2f2; color: #E30613; }
 
 /* Grid */
-.product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 25px; }
+.product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+
+@media (min-width: 640px) {
+  .product-grid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 25px; }
+}
 
 /* Zoom */
 .zoom-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 5000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); }

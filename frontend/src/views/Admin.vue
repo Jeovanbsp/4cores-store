@@ -125,8 +125,7 @@ import {
 import ProductCard from '../components/ProductCard.vue'
 import CartModal from '../components/CartModal.vue'
 import Notification from '../components/Notification.vue'
-
-const API_URL = "https://fourcores-api.onrender.com/api"
+import { API_URL } from '../config'
 
 const products = ref([])
 const feedbacks = ref([])

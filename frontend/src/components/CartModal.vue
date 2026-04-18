@@ -18,12 +18,12 @@
               <strong>{{ item.name }}</strong>
               <span class="qty-label">x{{ item.quantity }}</span>
             </div>
-            <span class="item-price">R$ {{ (item.price * item.quantity).toFixed(2) }}</span>
+            <span class="item-price">R$ {{ formatBRL(item.price * item.quantity) }}</span>
           </div>
 
           <div class="total-row">
             <span>Total:</span>
-            <strong>R$ {{ totalCartValue.toFixed(2) }}</strong>
+            <strong>R$ {{ formatBRL(totalCartValue) }}</strong>
           </div>
           
           <button @click="sendToWhatsApp" class="btn-whatsapp">
@@ -49,6 +49,7 @@ import {
   MessageCircleIcon, 
   ShoppingBagIcon 
 } from 'lucide-vue-next';
+import { formatBRL } from '../utils/format';
 
 const props = defineProps(['cartItems', 'isOpen']);
 defineEmits(['close']);
@@ -62,10 +63,10 @@ const sendToWhatsApp = () => {
   let message = "Olá 4Cores! Gostaria de encomendar:\n\n";
   
   props.cartItems.forEach(item => {
-    message += `• ${item.name} (${item.quantity}x) - R$ ${(item.price * item.quantity).toFixed(2)}\n`;
+    message += `• ${item.name} (${item.quantity}x) - R$ ${formatBRL(item.price * item.quantity)}\n`;
   });
 
-  message += `\n*Total Geral: R$ ${totalCartValue.value.toFixed(2)}*`;
+  message += `\n*Total Geral: R$ ${formatBRL(totalCartValue.value)}*`;
 
   const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
   window.open(url, '_blank');
