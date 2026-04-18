@@ -39,7 +39,7 @@
 
     <div class="content">
       <h4>{{ product.name }}</h4>
-      <p class="price">R$ {{ Number(product.price || 0).toFixed(2) }}</p>
+      <p class="price">R$ {{ formatBRL(product.price) }}</p>
       
       <p v-if="product.description" class="details">
         {{ product.description }}
@@ -58,6 +58,7 @@
 
 <script setup>
 import { ref } from 'vue';
+import { formatBRL } from '../utils/format';
 
 const props = defineProps(['product']);
 defineEmits(['add', 'zoom-image']);
