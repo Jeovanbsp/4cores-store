@@ -5,7 +5,7 @@
 
       <div v-if="product.stock === 0" class="sold-out-badge">ESGOTADO</div>
 
-      <div v-if="product.displayMode === 'carousel' && product.images.length > 1" class="carousel-container">
+      <div v-if="product.displayMode === 'carousel' && product.images && product.images.length > 1" class="carousel-container">
         <img 
           :src="product.images[currentIndex]" 
           class="product-img clickable" 
@@ -27,9 +27,9 @@
 
       <img 
         v-else 
-        :src="product.images[0] || 'https://via.placeholder.com/300'" 
+        :src="(product.images && product.images[0]) || 'https://via.placeholder.com/300'" 
         class="product-img clickable" 
-        @click="$emit('zoom-image', product.images[0] || 'https://via.placeholder.com/300')"
+        @click="$emit('zoom-image', (product.images && product.images[0]) || 'https://via.placeholder.com/300')"
       />
       
       <span class="category-tag" :class="product.category">
@@ -39,7 +39,7 @@
 
     <div class="content">
       <h4>{{ product.name }}</h4>
-      <p class="price">R$ {{ product.price.toFixed(2) }}</p>
+      <p class="price">R$ {{ Number(product.price || 0).toFixed(2) }}</p>
       
       <p v-if="product.description" class="details">
         {{ product.description }}

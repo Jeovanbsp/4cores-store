@@ -11,7 +11,7 @@ router.post('/login', (req, res) => {
     return res.json({ token });
   }
 
-  res.status(401).json({ message: 'Acesso negado, caralho!' });
+  res.status(401).json({ message: 'Acesso negado.' });
 });
 
 module.exports = router;

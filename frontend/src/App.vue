@@ -76,6 +76,7 @@ import { useRouter } from 'vue-router'
 import axios from 'axios'
 import Navbar from './components/Navbar.vue'
 import Notification from './components/Notification.vue'
+import { API_URL } from './config'
 import { 
   InstagramIcon, 
   MessageCircleIcon 
@@ -99,7 +100,7 @@ const handleLogin = async () => {
   loading.value = true
   try {
     // Comunicação real com o backend seguro
-    const res = await axios.post('https://fourcores-api.onrender.com/api/auth/login', {
+    const res = await axios.post(`${API_URL}/auth/login`, {
       username: 'admin',
       password: passwordInput.value
     })
