@@ -31,7 +31,7 @@ app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/feedbacks', require('./routes/feedbackRoutes'));
 
 // 5. Configuração da Porta dinâmica para o Render
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`🚀 Servidor rodando na porta ${PORT}`);
 });
