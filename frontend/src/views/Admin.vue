@@ -40,8 +40,11 @@
             
             <div class="input-row">
               <div class="input-group">
-                <label>Preço (R$)</label>
-                <input v-model.number="product.price" type="number" step="0.01" required />
+                <label>Preço</label>
+                <div class="price-input-wrap">
+                  <span class="price-prefix">R$</span>
+                  <input v-model="priceDisplay" @input="onPriceInput" type="text" inputmode="decimal" placeholder="0,00" required />
+                </div>
               </div>
               <div class="input-group">
                 <label>Estoque</label>
@@ -190,6 +193,7 @@ const productsList = ref([]);
 const feedbacksList = ref([]);
 const editingProduct = ref(null);
 const editingFeedback = ref(null);
+const priceDisplay = ref('');
 
 const product = reactive({ 
   name: '', 
@@ -202,6 +206,16 @@ const product = reactive({
   description: '',
   visible: true 
 });
+
+const onPriceInput = (e) => {
+  let raw = e.target.value.replace(/[^\d,]/g, '').replace(',', '.');
+  product.price = raw ? parseFloat(raw) : null;
+};
+
+const formatPriceDisplay = (val) => {
+  if (val == null || val === '') return '';
+  return String(Number(val).toFixed(2)).replace('.', ',');
+};
 
 const feedback = reactive({ name: '', text: '', stars: 5 });
 
@@ -252,11 +266,13 @@ const editProduct = (p) => {
     visible: p.visible ?? true, 
     description: p.description ?? ''
   });
+  priceDisplay.value = formatPriceDisplay(p.price);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 const resetProductForm = () => {
   editingProduct.value = null;
+  priceDisplay.value = '';
   Object.assign(product, { 
     name: '', topic: '', price: null, stock: 1, 
     category: 'venda', displayMode: 'single', images: [], 
@@ -317,6 +333,12 @@ input, select, textarea {
   font-size: 0.95rem; font-family: inherit; transition: all 0.2s; background: #fcfdfe;
 }
 input:focus, select:focus, textarea:focus { border-color: #E30613; outline: none; box-shadow: 0 0 0 4px rgba(227, 6, 19, 0.05); }
+
+.price-input-wrap { display: flex; align-items: center; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fcfdfe; overflow: hidden; transition: all 0.2s; }
+.price-input-wrap:focus-within { border-color: #E30613; box-shadow: 0 0 0 4px rgba(227, 6, 19, 0.05); }
+.price-prefix { padding: 0 12px; font-weight: 700; color: #64748b; font-size: 0.95rem; border-right: 1.5px solid #e2e8f0; background: #f1f5f9; height: 100%; display: flex; align-items: center; }
+.price-input-wrap input { border: none; box-shadow: none; border-radius: 0; background: transparent; flex: 1; }
+.price-input-wrap input:focus { border-color: transparent; box-shadow: none; outline: none; }
 
 .upload-container { background: #f8fafc; border: 2px dashed #e2e8f0; border-radius: 16px; padding: 20px; }
 .upload-box { display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; color: #64748b; font-weight: 600; }
