@@ -43,7 +43,7 @@
                 <label>Preço</label>
                 <div class="price-input-wrap">
                   <span class="price-prefix">R$</span>
-                  <input v-model="priceDisplay" @input="onPriceInput" type="text" inputmode="decimal" placeholder="0,00" required />
+                  <input v-model="priceDisplay" @input="onPriceInput" @blur="onPriceBlur" type="text" inputmode="decimal" placeholder="0,00" required />
                 </div>
               </div>
               <div class="input-group">
@@ -212,9 +212,15 @@ const onPriceInput = (e) => {
   product.price = raw ? parseFloat(raw) : null;
 };
 
+const onPriceBlur = () => {
+  if (product.price != null && !isNaN(product.price)) {
+    priceDisplay.value = formatPriceDisplay(product.price);
+  }
+};
+
 const formatPriceDisplay = (val) => {
   if (val == null || val === '') return '';
-  return String(Number(val).toFixed(2)).replace('.', ',');
+  return Number(val).toFixed(2).replace('.', ',');
 };
 
 const feedback = reactive({ name: '', text: '', stars: 5 });
