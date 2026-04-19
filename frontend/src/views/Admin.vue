@@ -391,5 +391,60 @@ input:focus, select:focus, textarea:focus { border-color: #E30613; outline: none
 .btn-mini { background: #f1f5f9; border: none; padding: 5px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 700; color: #64748b; cursor: pointer; }
 .btn-mini.delete:hover { background: #fee2e2; color: #ef4444; }
 
-@media (max-width: 900px) { .admin-content { grid-template-columns: 1fr; } }
+@media (max-width: 900px) {
+  .admin-page { padding: 0 0 40px; }
+
+  .admin-nav {
+    padding: 12px 16px;
+    margin-bottom: 0;
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .nav-brand h1 { font-size: 1rem; }
+
+  .admin-content {
+    grid-template-columns: 1fr;
+    gap: 0;
+    padding: 12px;
+  }
+
+  .glass-card {
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  .input-row {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .product-list-item {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .item-main-info { flex: 1; min-width: 0; }
+
+  .text-details strong {
+    font-size: 0.85rem;
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
+  }
+
+  .item-btns { margin-left: auto; }
+
+  .btn-primary, .btn-cancel { padding: 14px; font-size: 0.9rem; }
+
+  .form-actions { flex-direction: column-reverse; }
+  .btn-cancel { width: 100%; }
+}
 </style>
