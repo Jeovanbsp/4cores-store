@@ -52,3 +52,8 @@ externalPort = 3000
 [[ports]]
 localPort = 5000
 externalPort = 80
+
+[userenv]
+
+[userenv.shared]
+MONGO_URI = "mongodb+srv://jeovanbispoo_db_user:fBJmx9BDPui7rMC4@4cores.9t9e4me.mongodb.net/?appName=4cores"
