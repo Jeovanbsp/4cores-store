@@ -5,10 +5,12 @@ import { createRouter, createWebHistory } from 'vue-router'
 // Importando suas páginas
 import Home from './views/Home.vue'
 import Admin from './views/Admin.vue'
+import Login from './views/Login.vue'
 
 // Configurando as rotas
 const routes = [
   { path: '/', component: Home },
+  { path: '/login', component: Login },
   { 
     path: '/admin', 
     component: Admin,
