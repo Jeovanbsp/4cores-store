@@ -3,10 +3,21 @@ const router = express.Router();
 const Product = require('../models/Product');
 
 // Listar todos os produtos
+//
+// Usamos .lean() para receber POJOs sem os defaults do schema (Mongoose
+// preenche `soldOut: false` nos docs hidratados mesmo quando o campo não
+// existe no MongoDB). Assim conseguimos detectar docs antigos que não
+// possuem `soldOut` e derivar o valor a partir do `stock` legado.
 router.get('/', async (req, res) => {
   try {
-    const products = await Product.find();
-    res.json(products);
+    const products = await Product.find().lean();
+    const normalized = products.map(p => ({
+      ...p,
+      soldOut: typeof p.soldOut === 'boolean'
+        ? p.soldOut
+        : (typeof p.stock === 'number' && p.stock <= 0),
+    }));
+    res.json(normalized);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
