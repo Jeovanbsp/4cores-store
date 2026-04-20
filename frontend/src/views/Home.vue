@@ -107,10 +107,16 @@
       </div>
     </section>
 
-    <CartModal :cartItems="cart" :isOpen="showCart" @close="showCart = false" />
+    <CartModal
+      :cartItems="cart"
+      :isOpen="showCart"
+      @close="showCart = false"
+      @update-qty="updateCartQty"
+      @remove="removeFromCart"
+    />
     <button class="cart-toggle" @click="showCart = !showCart">
       <ShoppingCartIcon />
-      <span v-if="cart.length > 0" class="cart-count">{{ cart.length }}</span>
+      <span v-if="cart.length > 0" class="cart-count">{{ totalCartQty }}</span>
     </button>
   </div>
 </template>
@@ -190,22 +196,40 @@ const filteredProducts = computed(() => {
 
 const addToCart = (product) => {
   if (product.stock <= 0) {
-    notify("Item esgotado!");
+    notify("Item indisponível no momento!");
     return;
   }
   const existing = cart.value.find(item => item._id === product._id);
   if (existing) {
-    if (existing.quantity < product.stock) {
-      existing.quantity++;
-      showCart.value = true;
-    } else {
-      notify("Limite de estoque atingido");
-    }
+    existing.quantity++;
+    notify(`${product.name} (${existing.quantity}x) no carrinho`, 'success');
   } else {
     cart.value.push({ ...product, quantity: 1 });
-    showCart.value = true;
+    notify(`${product.name} adicionado à encomenda`, 'success');
+  }
+  showCart.value = true;
+};
+
+const updateCartQty = ({ id, quantity }) => {
+  const item = cart.value.find(i => i._id === id);
+  if (!item) return;
+  const q = Number.isFinite(quantity) && quantity > 0 ? Math.floor(quantity) : 1;
+  item.quantity = q;
+};
+
+const removeFromCart = (id) => {
+  const idx = cart.value.findIndex(i => i._id === id);
+  if (idx === -1) return;
+  const [removed] = cart.value.splice(idx, 1);
+  notify(`${removed.name} removido da encomenda`, 'success');
+  if (cart.value.length === 0) {
+    showCart.value = false;
   }
 };
+
+const totalCartQty = computed(() =>
+  cart.value.reduce((acc, item) => acc + (item.quantity || 0), 0)
+);
 
 onMounted(fetchData);
 </script>
