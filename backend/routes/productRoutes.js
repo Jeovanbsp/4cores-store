@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   const data = {
     ...req.body,
-    status: req.body.stock > 0 ? 'Disponível' : 'Esgotado'
+    status: req.body.soldOut ? 'Esgotado' : 'Disponível'
   };
   
   const product = new Product(data);
@@ -33,7 +33,7 @@ router.put('/:id', async (req, res) => {
   try {
     const data = {
       ...req.body,
-      status: req.body.stock > 0 ? 'Disponível' : 'Esgotado'
+      status: req.body.soldOut ? 'Esgotado' : 'Disponível'
     };
     const updatedProduct = await Product.findByIdAndUpdate(
       req.params.id, 

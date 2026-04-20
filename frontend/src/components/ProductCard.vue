@@ -1,9 +1,9 @@
 <template>
-  <div class="card" :class="{ 'out-of-stock': product.stock === 0 }">
+  <div class="card" :class="{ 'out-of-stock': isSoldOut }">
     <div class="image-wrapper">
       <span v-if="product.topic" class="topic-tag-overlay">{{ product.topic }}</span>
 
-      <div v-if="product.stock === 0" class="sold-out-badge">ESGOTADO</div>
+      <div v-if="isSoldOut" class="sold-out-badge">ESGOTADO</div>
 
       <div v-if="product.displayMode === 'carousel' && product.images && product.images.length > 1" class="carousel-container">
         <img 
@@ -48,22 +48,29 @@
       <button 
         @click="$emit('add', product)" 
         class="btn-add"
-        :disabled="product.stock === 0"
+        :disabled="isSoldOut"
       >
-        {{ product.stock === 0 ? 'Indisponível' : 'Adicionar ao Carrinho' }}
+        {{ isSoldOut ? 'Indisponível' : 'Adicionar à Encomenda' }}
       </button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { formatBRL } from '../utils/format';
 
 const props = defineProps(['product']);
 defineEmits(['add', 'zoom-image']);
 
 const currentIndex = ref(0);
+
+// Suporta tanto o novo campo `soldOut` quanto docs antigos (stock === 0).
+const isSoldOut = computed(() => {
+  if (props.product.soldOut === true) return true;
+  if (props.product.soldOut === false) return false;
+  return props.product.stock === 0;
+});
 
 const nextImg = () => {
   if (currentIndex.value < props.product.images.length - 1) {
@@ -199,11 +206,8 @@ h4 { margin: 0; font-size: 1.1rem; color: #1e293b; font-weight: 700; }
   color: #64748b; 
   margin-bottom: 15px; 
   line-height: 1.5;
-  display: -webkit-box;
-  -webkit-line-clamp: 2; /* Limita a 2 linhas */
-  line-clamp: 2;         /* Versão padrão para tirar o aviso do VS Code */
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .btn-add { 
