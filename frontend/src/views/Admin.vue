@@ -46,10 +46,6 @@
                   <input v-model="priceDisplay" @input="onPriceInput" @blur="onPriceBlur" type="text" inputmode="decimal" placeholder="0,00" required />
                 </div>
               </div>
-              <div class="input-group">
-                <label>Estoque</label>
-                <input v-model.number="product.stock" type="number" required />
-              </div>
             </div>
 
             <div class="input-group">
@@ -83,6 +79,14 @@
                 <input type="checkbox" v-model="product.visible" />
                 <span class="slider"></span>
                 <span class="label-text">{{ product.visible ? 'Produto Visível na Loja' : 'Produto OCULTO na Loja' }}</span>
+              </label>
+            </div>
+
+            <div class="input-group checkbox-group">
+              <label class="toggle-switch">
+                <input type="checkbox" v-model="product.soldOut" />
+                <span class="slider soldout"></span>
+                <span class="label-text">{{ product.soldOut ? 'Marcado como ESGOTADO' : 'Produto Disponível para Encomenda' }}</span>
               </label>
             </div>
 
@@ -129,7 +133,8 @@
                   <div class="meta-info">
                     <span class="topic-tag">{{ p.topic || 'Geral' }}</span>
                     <span class="badge" :class="p.category">{{ p.category }}</span>
-                    <span class="stock-label" :class="{ 'zero': p.stock <= 0 }">Qtd: {{ p.stock || 0 }}</span>
+                    <span v-if="p.soldOut" class="stock-label zero">Esgotado</span>
+                    <span v-else class="stock-label">Disponível</span>
                   </div>
                 </div>
               </div>
@@ -199,12 +204,12 @@ const product = reactive({
   name: '', 
   topic: '', 
   price: null, 
-  stock: 1, 
   category: 'venda', 
   displayMode: 'single', 
   images: [], 
   description: '',
-  visible: true 
+  visible: true,
+  soldOut: false
 });
 
 const onPriceInput = (e) => {
@@ -270,7 +275,8 @@ const editProduct = (p) => {
   Object.assign(product, { 
     ...p, 
     visible: p.visible ?? true, 
-    description: p.description ?? ''
+    description: p.description ?? '',
+    soldOut: p.soldOut ?? false
   });
   priceDisplay.value = formatPriceDisplay(p.price);
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -280,9 +286,9 @@ const resetProductForm = () => {
   editingProduct.value = null;
   priceDisplay.value = '';
   Object.assign(product, { 
-    name: '', topic: '', price: null, stock: 1, 
+    name: '', topic: '', price: null, 
     category: 'venda', displayMode: 'single', images: [], 
-    description: '', visible: true 
+    description: '', visible: true, soldOut: false
   });
 };
 

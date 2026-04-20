@@ -195,7 +195,8 @@ const filteredProducts = computed(() => {
 });
 
 const addToCart = (product) => {
-  if (product.stock <= 0) {
+  const soldOut = product.soldOut === true || (product.soldOut === undefined && product.stock === 0);
+  if (soldOut) {
     notify("Item indisponível no momento!");
     return;
   }
