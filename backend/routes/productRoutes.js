@@ -3,10 +3,34 @@ const router = express.Router();
 const Product = require('../models/Product');
 
 // Listar todos os produtos
+//
+// Usamos .lean() para receber POJOs sem os defaults do schema (Mongoose
+// preenche `soldOut: false` nos docs hidratados mesmo quando o campo não
+// existe no MongoDB). Assim conseguimos detectar docs antigos que não
+// possuem `soldOut` e derivar o valor a partir do `stock` legado.
+// Como .lean() também desabilita os defaults dos demais campos, aplicamos
+// defaults equivalentes ao schema para proteger os consumidores no frontend
+// (ex.: Admin.vue acessa p.images[0] sem null-guard).
 router.get('/', async (req, res) => {
   try {
-    const products = await Product.find();
-    res.json(products);
+    const products = await Product.find().lean();
+    const normalized = products.map(p => {
+      const soldOut = typeof p.soldOut === 'boolean'
+        ? p.soldOut
+        : (typeof p.stock === 'number' && p.stock <= 0);
+      return {
+        ...p,
+        soldOut,
+        images: Array.isArray(p.images) ? p.images : [],
+        visible: typeof p.visible === 'boolean' ? p.visible : true,
+        category: typeof p.category === 'string' ? p.category : 'venda',
+        displayMode: typeof p.displayMode === 'string' ? p.displayMode : 'single',
+        description: typeof p.description === 'string' ? p.description : '',
+        topic: typeof p.topic === 'string' ? p.topic : '',
+        status: soldOut ? 'Esgotado' : 'Disponível',
+      };
+    });
+    res.json(normalized);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

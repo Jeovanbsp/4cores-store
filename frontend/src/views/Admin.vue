@@ -133,7 +133,7 @@
                   <div class="meta-info">
                     <span class="topic-tag">{{ p.topic || 'Geral' }}</span>
                     <span class="badge" :class="p.category">{{ p.category }}</span>
-                    <span v-if="p.soldOut" class="stock-label zero">Esgotado</span>
+                    <span v-if="isSoldOut(p)" class="stock-label zero">Esgotado</span>
                     <span v-else class="stock-label">Disponível</span>
                   </div>
                 </div>
@@ -234,6 +234,13 @@ const uniqueTopics = computed(() => {
   const topics = productsList.value.map(p => p.topic).filter(t => t);
   return [...new Set(topics)];
 });
+
+// Fallback para docs antigos sem o campo `soldOut`: considera esgotado
+// se o estoque legado for 0. Mantém consistência com ProductCard/Home.
+const isSoldOut = (p) => {
+  if (typeof p.soldOut === 'boolean') return p.soldOut;
+  return typeof p.stock === 'number' && p.stock <= 0;
+};
 
 const fetchData = async () => {
   try {
