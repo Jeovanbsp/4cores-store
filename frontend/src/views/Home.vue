@@ -122,7 +122,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
 import { 
@@ -145,8 +145,31 @@ const filter = ref('todos');
 const selectedTopic = ref('todos');
 const showTopicsMenu = ref(false);
 const zoomedImage = ref(null);
-const cart = ref([]);
+// Carrinho persistido no localStorage para não perder a encomenda ao recarregar.
+const CART_STORAGE_KEY = '4cores_cart_v1';
+const loadCart = () => {
+  try {
+    const raw = localStorage.getItem(CART_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter(i => i && i._id && typeof i.quantity === 'number' && i.quantity > 0)
+      .map(i => ({ ...i, quantity: Math.max(1, Math.floor(i.quantity)) }));
+  } catch {
+    return [];
+  }
+};
+const cart = ref(loadCart());
 const showCart = ref(false);
+
+watch(cart, (val) => {
+  try {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(val));
+  } catch {
+    // storage cheio ou indisponível — ignora silenciosamente
+  }
+}, { deep: true });
 const showLoginModal = ref(false);
 const passwordInput = ref('');
 const showToast = ref(false);

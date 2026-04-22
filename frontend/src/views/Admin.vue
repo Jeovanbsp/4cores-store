@@ -120,10 +120,41 @@
         <section class="glass-card">
           <div class="card-header">
             <div class="header-icon secondary"><LayoutGridIcon :size="18" /></div>
-            <h2>Itens no Catálogo</h2>
+            <h2>Itens no Catálogo <span class="count-tag">{{ filteredAdminProducts.length }}/{{ productsList.length }}</span></h2>
           </div>
-          <div class="items-grid">
-            <div v-for="p in productsList" :key="p._id" class="product-list-item" :class="{ 'hidden-item': p.visible === false }">
+
+          <div class="list-controls">
+            <div class="search-box">
+              <SearchIcon :size="16" class="search-icon" />
+              <input
+                v-model="listSearch"
+                type="text"
+                placeholder="Buscar por nome, tópico ou categoria..."
+                class="list-search-input"
+              />
+              <button
+                v-if="listSearch"
+                type="button"
+                class="clear-search"
+                @click="listSearch = ''"
+                aria-label="Limpar busca"
+              >×</button>
+            </div>
+            <select v-model="listSort" class="list-sort">
+              <option value="recent">Mais recentes</option>
+              <option value="oldest">Mais antigos</option>
+              <option value="name-asc">Nome (A→Z)</option>
+              <option value="name-desc">Nome (Z→A)</option>
+              <option value="price-asc">Preço (menor)</option>
+              <option value="price-desc">Preço (maior)</option>
+            </select>
+          </div>
+
+          <div v-if="filteredAdminProducts.length === 0" class="list-empty">
+            Nenhum produto corresponde à busca.
+          </div>
+          <div v-else class="items-grid">
+            <div v-for="p in filteredAdminProducts" :key="p._id" class="product-list-item" :class="{ 'hidden-item': p.visible === false }">
               <div class="item-main-info">
                 <div class="miniature-container">
                   <img :src="p.images[0] || 'https://via.placeholder.com/50'" class="miniature" />
@@ -190,7 +221,7 @@ import { ref, reactive, onMounted, computed } from 'vue';
 import axios from 'axios';
 import { 
   PlusCircleIcon, EditIcon, Trash2Icon, Package2Icon, 
-  LayoutGridIcon, MessageSquareIcon, UploadCloudIcon 
+  LayoutGridIcon, MessageSquareIcon, UploadCloudIcon, SearchIcon
 } from 'lucide-vue-next';
 import { API_URL } from '../config';
 
@@ -199,6 +230,8 @@ const feedbacksList = ref([]);
 const editingProduct = ref(null);
 const editingFeedback = ref(null);
 const priceDisplay = ref('');
+const listSearch = ref('');
+const listSort = ref('recent');
 
 const product = reactive({ 
   name: '', 
@@ -233,6 +266,43 @@ const feedback = reactive({ name: '', text: '', stars: 5 });
 const uniqueTopics = computed(() => {
   const topics = productsList.value.map(p => p.topic).filter(t => t);
   return [...new Set(topics)];
+});
+
+// Busca e ordenação da lista do admin. O _id do Mongo contém o timestamp de
+// criação nos primeiros 4 bytes, então usamos ele para ordenar por data.
+const filteredAdminProducts = computed(() => {
+  const term = listSearch.value.trim().toLowerCase();
+  const list = productsList.value.filter(p => {
+    if (!term) return true;
+    const haystack = [p.name, p.topic, p.category, p.description]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+    return haystack.includes(term);
+  });
+
+  const sorted = [...list];
+  switch (listSort.value) {
+    case 'oldest':
+      sorted.sort((a, b) => String(a._id).localeCompare(String(b._id)));
+      break;
+    case 'name-asc':
+      sorted.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'pt-BR'));
+      break;
+    case 'name-desc':
+      sorted.sort((a, b) => (b.name || '').localeCompare(a.name || '', 'pt-BR'));
+      break;
+    case 'price-asc':
+      sorted.sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
+      break;
+    case 'price-desc':
+      sorted.sort((a, b) => (b.price ?? 0) - (a.price ?? 0));
+      break;
+    case 'recent':
+    default:
+      sorted.sort((a, b) => String(b._id).localeCompare(String(a._id)));
+  }
+  return sorted;
 });
 
 const fetchData = async () => {
@@ -363,6 +433,17 @@ input:focus, select:focus, textarea:focus { border-color: #E30613; outline: none
 .btn-primary { background: #E30613; color: white; border: none; padding: 16px; border-radius: 12px; font-weight: 700; cursor: pointer; flex: 1; }
 .btn-cancel { background: #f1f5f9; color: #64748b; border: none; padding: 16px; border-radius: 12px; font-weight: 700; cursor: pointer; }
 .btn-success { background: #10b981; color: white; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 10px; }
+
+.count-tag { background: #f1f5f9; color: #475569; font-size: 0.7rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; margin-left: 8px; vertical-align: middle; }
+
+.list-controls { display: flex; gap: 10px; margin-bottom: 18px; align-items: stretch; flex-wrap: wrap; }
+.search-box { position: relative; flex: 1; min-width: 200px; }
+.search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; }
+.list-search-input { width: 100%; padding: 10px 36px 10px 36px; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fcfdfe; font-size: 0.9rem; }
+.list-search-input:focus { border-color: #E30613; outline: none; box-shadow: 0 0 0 3px rgba(227, 6, 19, 0.05); }
+.clear-search { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: #e2e8f0; color: #475569; border: none; width: 22px; height: 22px; border-radius: 50%; cursor: pointer; font-size: 14px; line-height: 1; }
+.list-sort { padding: 10px 14px; border: 1.5px solid #e2e8f0; border-radius: 12px; background: #fcfdfe; font-size: 0.9rem; font-family: inherit; cursor: pointer; }
+.list-empty { text-align: center; color: #94a3b8; padding: 30px 10px; font-size: 0.9rem; }
 
 .product-list-item { display: flex; justify-content: space-between; align-items: center; background: #fcfdfe; padding: 15px; border-radius: 16px; margin-bottom: 12px; border: 1px solid #f1f5f9; }
 .hidden-item { opacity: 0.5; background: #f1f5f9; border-left: 4px solid #64748b; }

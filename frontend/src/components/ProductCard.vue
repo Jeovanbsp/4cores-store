@@ -45,23 +45,74 @@
         {{ product.description }}
       </p>
       
-      <button 
-        @click="$emit('add', product)" 
-        class="btn-add"
-        :disabled="isSoldOut"
-      >
-        {{ isSoldOut ? 'Indisponível' : 'Adicionar à Encomenda' }}
-      </button>
+      <div class="action-row">
+        <button 
+          @click="$emit('add', product)" 
+          class="btn-add"
+          :disabled="isSoldOut"
+        >
+          {{ isSoldOut ? 'Indisponível' : 'Adicionar à Encomenda' }}
+        </button>
+        <button
+          type="button"
+          class="btn-share"
+          :title="shareSupported ? 'Compartilhar produto' : 'Compartilhar no WhatsApp'"
+          aria-label="Compartilhar produto"
+          @click="shareProduct"
+        >
+          <Share2Icon :size="18" />
+        </button>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
+import { Share2Icon } from 'lucide-vue-next';
 import { formatBRL } from '../utils/format';
 
 const props = defineProps(['product']);
 defineEmits(['add', 'zoom-image']);
+
+const shareSupported = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+
+const buildShareText = () => {
+  const tipo = props.product.category === 'aluguel' ? 'Aluguel' : 'Venda';
+  const preco = `R$ ${formatBRL(props.product.price)}`;
+  const linhas = [
+    `*${props.product.name}* — ${tipo}`,
+    `Preço: ${preco}`,
+  ];
+  if (props.product.description) linhas.push(props.product.description);
+  linhas.push('', 'Confira no catálogo da 4Cores:');
+  return linhas.join('\n');
+};
+
+const shareProduct = async () => {
+  const url = typeof window !== 'undefined' ? window.location.href : '';
+  const text = buildShareText();
+  const shareData = {
+    title: `4Cores — ${props.product.name}`,
+    text,
+    url,
+  };
+
+  if (shareSupported) {
+    try {
+      await navigator.share(shareData);
+      return;
+    } catch (err) {
+      // Usuário cancelou ou API não disponível: cai no fallback.
+      if (err && err.name === 'AbortError') return;
+    }
+  }
+
+  // Fallback universal: abre o WhatsApp com a mensagem já pronta.
+  const message = `${text}\n${url}`;
+  const waUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+  window.open(waUrl, '_blank', 'noopener');
+};
 
 const currentIndex = ref(0);
 
@@ -210,8 +261,10 @@ h4 { margin: 0; font-size: 1.1rem; color: #1e293b; font-weight: 700; }
   word-break: break-word;
 }
 
+.action-row { display: flex; gap: 8px; margin-top: auto; align-items: stretch; }
+
 .btn-add { 
-  width: 100%; 
+  flex: 1;
   padding: 12px; 
   background: #1e293b; 
   color: white; 
@@ -219,8 +272,21 @@ h4 { margin: 0; font-size: 1.1rem; color: #1e293b; font-weight: 700; }
   border-radius: 10px; 
   cursor: pointer; 
   font-weight: 700; 
-  margin-top: auto;
 }
 .btn-add:hover:not(:disabled) { background: #E30613; }
 .btn-add:disabled { background: #cbd5e1; cursor: not-allowed; color: #64748b; }
+
+.btn-share {
+  background: #f1f5f9;
+  color: #475569;
+  border: none;
+  border-radius: 10px;
+  padding: 0 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+}
+.btn-share:hover { background: #25d366; color: white; }
 </style>
