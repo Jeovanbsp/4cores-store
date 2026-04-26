@@ -176,6 +176,62 @@
             </div>
           </div>
         </section>
+
+        <section class="glass-card">
+          <div class="card-header">
+            <div class="header-icon hero-icon"><ImageIcon :size="18" /></div>
+            <h2>Imagens em Destaque <span class="count-tag">{{ heroImages.length }}</span></h2>
+          </div>
+          
+          <form @submit.prevent="handleHeroImageSubmit" class="modern-form">
+            <div class="upload-section">
+              <label class="upload-label">Adicionar Imagem de Destaque (Hero)</label>
+              <div class="upload-container">
+                <label class="upload-box">
+                  <UploadCloudIcon :size="24" />
+                  <span>Selecionar Imagem</span>
+                  <input type="file" @change="handleHeroImageUpload" accept="image/*" hidden />
+                </label>
+                <div v-if="heroImagePreview" class="hero-preview">
+                  <img :src="heroImagePreview" />
+                  <button type="button" @click="heroImagePreview = null" class="btn-remove-img">×</button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="input-group">
+              <label>Texto Alternativo (Alt)</label>
+              <input v-model="heroImageForm.altText" type="text" placeholder="Ex: Promoção dia das mães" />
+            </div>
+            
+            <div class="input-group">
+              <label>LinkURL (Opcional)</label>
+              <input v-model="heroImageForm.link" type="url" placeholder="https://exemplo.com" />
+            </div>
+            
+            <button type="submit" class="btn-success" :disabled="!heroImagePreview">
+              Adicionar Imagem
+            </button>
+          </form>
+          
+          <div class="hero-list" v-if="heroImages.length > 0">
+            <div v-for="(img, index) in heroImages" :key="img._id" class="hero-item">
+              <img :src="img.imageUrl" class="hero-thumb" />
+              <div class="hero-info">
+                <span class="hero-alt">{{ img.altText || 'Sem texto alternativo' }}</span>
+                <span v-if="img.link" class="hero-link">{{ img.link }}</span>
+              </div>
+              <div class="hero-actions">
+                <button @click="moveHeroUp(index)" :disabled="index === 0" class="btn-icon"><ChevronUpIcon :size="16" /></button>
+                <button @click="moveHeroDown(index)" :disabled="index === heroImages.length - 1" class="btn-icon"><ChevronDownIcon :size="16" /></button>
+                <button @click="deleteHeroImage(img._id)" class="btn-icon delete"><Trash2Icon :size="16" /></button>
+              </div>
+            </div>
+          </div>
+          <div v-else class="list-empty">
+            Nenhuma imagem em destaque adicionada.
+          </div>
+        </section>
       </main>
 
       <aside class="side-column">
@@ -221,17 +277,26 @@ import { ref, reactive, onMounted, computed } from 'vue';
 import axios from 'axios';
 import { 
   PlusCircleIcon, EditIcon, Trash2Icon, Package2Icon, 
-  LayoutGridIcon, MessageSquareIcon, UploadCloudIcon, SearchIcon
+  LayoutGridIcon, MessageSquareIcon, UploadCloudIcon, SearchIcon,
+  ImageIcon, ChevronUpIcon, ChevronDownIcon
 } from 'lucide-vue-next';
 import { API_URL } from '../config';
 
 const productsList = ref([]);
 const feedbacksList = ref([]);
+const heroImages = ref([]);
 const editingProduct = ref(null);
 const editingFeedback = ref(null);
 const priceDisplay = ref('');
 const listSearch = ref('');
 const listSort = ref('recent');
+
+// Hero Image states
+const heroImagePreview = ref(null);
+const heroImageForm = reactive({
+  altText: '',
+  link: ''
+});
 
 const product = reactive({ 
   name: '', 
@@ -307,12 +372,14 @@ const filteredAdminProducts = computed(() => {
 
 const fetchData = async () => {
   try {
-    const [pRes, fRes] = await Promise.all([
+    const [pRes, fRes, hRes] = await Promise.all([
       axios.get(`${API_URL}/products`),
-      axios.get(`${API_URL}/feedbacks`)
+      axios.get(`${API_URL}/feedbacks`),
+      axios.get(`${API_URL}/hero-images`)
     ]);
     productsList.value = pRes.data;
     feedbacksList.value = fRes.data;
+    heroImages.value = hRes.data;
   } catch (err) { console.error(err); }
 };
 
@@ -384,6 +451,64 @@ const handleFeedbackSubmit = async () => {
 const editFeedback = (f) => { editingFeedback.value = f; Object.assign(feedback, f); };
 const resetFeedbackForm = () => { editingFeedback.value = null; Object.assign(feedback, { name: '', text: '', stars: 5 }); };
 const deleteFeedback = async (id) => { if (confirm("Excluir?")) { await axios.delete(`${API_URL}/feedbacks/${id}`); fetchData(); } };
+
+// Hero Image functions
+const handleHeroImageUpload = (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      heroImagePreview.value = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
+const handleHeroImageSubmit = async () => {
+  if (!heroImagePreview.value) return;
+  try {
+    await axios.post(`${API_URL}/hero-images`, {
+      imageUrl: heroImagePreview.value,
+      altText: heroImageForm.altText,
+      link: heroImageForm.link
+    });
+    heroImagePreview.value = null;
+    heroImageForm.altText = '';
+    heroImageForm.link = '';
+    fetchData();
+  } catch (err) { console.error(err); }
+};
+
+const deleteHeroImage = async (id) => {
+  if (confirm("Excluir imagem de destaque?")) {
+    try {
+      await axios.delete(`${API_URL}/hero-images/${id}`);
+      fetchData();
+    } catch (err) { console.error(err); }
+  }
+};
+
+const moveHeroUp = async (index) => {
+  if (index === 0) return;
+  const newOrder = [...heroImages.value];
+  [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
+  const ids = newOrder.map(img => img._id);
+  try {
+    await axios.post(`${API_URL}/hero-images/reorder`, { ids });
+    fetchData();
+  } catch (err) { console.error(err); }
+};
+
+const moveHeroDown = async (index) => {
+  if (index === heroImages.value.length - 1) return;
+  const newOrder = [...heroImages.value];
+  [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
+  const ids = newOrder.map(img => img._id);
+  try {
+    await axios.post(`${API_URL}/hero-images/reorder`, { ids });
+    fetchData();
+  } catch (err) { console.error(err); }
+};
 
 onMounted(fetchData);
 </script>
@@ -534,4 +659,17 @@ input:focus, select:focus, textarea:focus { border-color: #E30613; outline: none
   .form-actions { flex-direction: column-reverse; }
   .btn-cancel { width: 100%; }
 }
+
+/* Hero Images Styles */
+.header-icon.hero-icon { background: #fef3c7; color: #f59e0b; }
+.hero-preview { position: relative; width: 100%; max-width: 300px; margin-top: 15px; border-radius: 12px; overflow: hidden; }
+.hero-preview img { width: 100%; height: auto; display: block; }
+.hero-list { margin-top: 20px; }
+.hero-item { display: flex; align-items: center; gap: 12px; background: #fcfdfe; padding: 12px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #f1f5f9; }
+.hero-thumb { width: 80px; height: 45px; object-fit: cover; border-radius: 8px; }
+.hero-info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.hero-alt { font-size: 0.85rem; color: #1e293b; font-weight: 600; }
+.hero-link { font-size: 0.7rem; color: #64748b; text-decoration: underline; }
+.hero-actions { display: flex; gap: 4px; }
+.hero-actions .btn-icon:disabled { opacity: 0.3; cursor: not-allowed; }
 </style>
