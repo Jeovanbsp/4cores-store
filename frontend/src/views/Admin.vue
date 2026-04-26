@@ -176,7 +176,9 @@
             </div>
           </div>
         </section>
+      </main>
 
+      <aside class="side-column">
         <section class="glass-card">
           <div class="card-header">
             <div class="header-icon hero-icon"><ImageIcon :size="18" /></div>
@@ -185,56 +187,44 @@
           
           <form @submit.prevent="handleHeroImageSubmit" class="modern-form">
             <div class="upload-section">
-              <label class="upload-label">Adicionar Imagem de Destaque (Hero)</label>
-              <div class="upload-container">
-                <label class="upload-box">
-                  <UploadCloudIcon :size="24" />
-                  <span>Selecionar Imagem</span>
+              <label class="upload-label">Adicionar Hero</label>
+              <div class="upload-container compact">
+                <label class="upload-box small">
+                  <UploadCloudIcon :size="20" />
+                  <span>Selecionar</span>
                   <input type="file" @change="handleHeroImageUpload" accept="image/*" hidden />
                 </label>
-                <div v-if="heroImagePreview" class="hero-preview">
+                <div v-if="heroImagePreview" class="hero-preview small">
                   <img :src="heroImagePreview" />
                   <button type="button" @click="heroImagePreview = null" class="btn-remove-img">×</button>
                 </div>
               </div>
             </div>
             
-            <div class="input-group">
-              <label>Texto Alternativo (Alt)</label>
-              <input v-model="heroImageForm.altText" type="text" placeholder="Ex: Promoção dia das mães" />
-            </div>
+            <input v-model="heroImageForm.altText" type="text" placeholder="Texto alternativo" />
+            <input v-model="heroImageForm.link" type="url" placeholder="Link URL (opcional)" />
             
-            <div class="input-group">
-              <label>LinkURL (Opcional)</label>
-              <input v-model="heroImageForm.link" type="url" placeholder="https://exemplo.com" />
-            </div>
-            
-            <button type="submit" class="btn-success" :disabled="!heroImagePreview">
-              Adicionar Imagem
-            </button>
+            <button type="submit" class="btn-success" :disabled="!heroImagePreview">Adicionar</button>
           </form>
           
           <div class="hero-list" v-if="heroImages.length > 0">
-            <div v-for="(img, index) in heroImages" :key="img._id" class="hero-item">
+            <div v-for="(img, index) in heroImages" :key="img._id" class="hero-item compact">
               <img :src="img.imageUrl" class="hero-thumb" />
               <div class="hero-info">
-                <span class="hero-alt">{{ img.altText || 'Sem texto alternativo' }}</span>
-                <span v-if="img.link" class="hero-link">{{ img.link }}</span>
+                <span class="hero-alt">{{ img.altText || '-' }}</span>
               </div>
               <div class="hero-actions">
-                <button @click="moveHeroUp(index)" :disabled="index === 0" class="btn-icon"><ChevronUpIcon :size="16" /></button>
-                <button @click="moveHeroDown(index)" :disabled="index === heroImages.length - 1" class="btn-icon"><ChevronDownIcon :size="16" /></button>
-                <button @click="deleteHeroImage(img._id)" class="btn-icon delete"><Trash2Icon :size="16" /></button>
+                <button @click="moveHeroUp(index)" :disabled="index === 0" class="btn-icon"><ChevronUpIcon :size="14" /></button>
+                <button @click="moveHeroDown(index)" :disabled="index === heroImages.length - 1" class="btn-icon"><ChevronDownIcon :size="14" /></button>
+                <button @click="deleteHeroImage(img._id)" class="btn-icon delete"><Trash2Icon :size="14" /></button>
               </div>
             </div>
           </div>
-          <div v-else class="list-empty">
-            Nenhuma imagem em destaque adicionada.
+          <div v-else class="list-empty small">
+            Nenhuma imagem adicionada.
           </div>
         </section>
-      </main>
 
-      <aside class="side-column">
         <section class="glass-card">
           <div class="card-header">
             <div class="header-icon info"><MessageSquareIcon :size="18" /></div>
@@ -662,14 +652,16 @@ input:focus, select:focus, textarea:focus { border-color: #E30613; outline: none
 
 /* Hero Images Styles */
 .header-icon.hero-icon { background: #fef3c7; color: #f59e0b; }
-.hero-preview { position: relative; width: 100%; max-width: 300px; margin-top: 15px; border-radius: 12px; overflow: hidden; }
-.hero-preview img { width: 100%; height: auto; display: block; }
-.hero-list { margin-top: 20px; }
-.hero-item { display: flex; align-items: center; gap: 12px; background: #fcfdfe; padding: 12px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #f1f5f9; }
-.hero-thumb { width: 80px; height: 45px; object-fit: cover; border-radius: 8px; }
-.hero-info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
-.hero-alt { font-size: 0.85rem; color: #1e293b; font-weight: 600; }
-.hero-link { font-size: 0.7rem; color: #64748b; text-decoration: underline; }
-.hero-actions { display: flex; gap: 4px; }
-.hero-actions .btn-icon:disabled { opacity: 0.3; cursor: not-allowed; }
+.upload-container.compact { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.upload-box.small { padding: 10px; font-size: 0.8rem; }
+.hero-preview.small { width: 100%; border-radius: 8px; overflow: hidden; }
+.hero-preview.small img { width: 100%; height: auto; display: block; max-height: 80px; object-fit: cover; }
+.hero-list { margin-top: 15px; }
+.hero-item.compact { display: flex; align-items: center; gap: 8px; background: #fcfdfe; padding: 8px; border-radius: 8px; margin-bottom: 6px; border: 1px solid #f1f5f9; }
+.hero-thumb { width: 50px; height: 35px; object-fit: cover; border-radius: 6px; }
+.hero-info { flex: 1; }
+.hero-alt { font-size: 0.75rem; color: #1e293b; }
+.hero-actions { display: flex; gap: 2px; }
+.hero-actions .btn-icon { padding: 4px; }
+.list-empty.small { padding: 12px; font-size: 0.8rem; }
 </style>
