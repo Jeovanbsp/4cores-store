@@ -39,6 +39,8 @@
     <header class="header-main">
       <img src="../assets/4cores.png" alt="Logo 4Cores" class="main-logo" @dblclick="showLoginModal = true">
       
+      <HeroCarousel :images="heroImages" />
+      
       <div class="search-wrapper">
         <SearchIcon class="icon-search" />
         <input type="text" v-model="search" placeholder="Busque um personagem ou tema..." class="search-bar" />
@@ -79,7 +81,12 @@
       </div>
     </section>
 
-    <div v-if="filteredProducts.length > 0" class="product-grid">
+    <div v-if="isLoading" class="no-results">
+      <PackageSearchIcon class="icon-big" />
+      <p>Aguarde um momento que estamos carregando nosso catálogo</p>
+    </div>
+    
+    <div v-else-if="filteredProducts.length > 0" class="product-grid">
       <ProductCard 
         v-for="p in filteredProducts" 
         :key="p._id" 
@@ -133,6 +140,7 @@ import {
 import ProductCard from '../components/ProductCard.vue';
 import CartModal from '../components/CartModal.vue';
 import Notification from '../components/Notification.vue';
+import HeroCarousel from '../components/HeroCarousel.vue';
 import { API_URL } from '../config';
 
 const router = useRouter();
@@ -140,6 +148,7 @@ const router = useRouter();
 // Estados Reativos
 const products = ref([]);
 const feedbacks = ref([]);
+const heroImages = ref([]);
 const search = ref('');
 const filter = ref('todos');
 const selectedTopic = ref('todos');
@@ -172,6 +181,7 @@ watch(cart, (val) => {
 }, { deep: true });
 const showLoginModal = ref(false);
 const passwordInput = ref('');
+const isLoading = ref(true);
 const showToast = ref(false);
 const toastMsg = ref('');
 const toastType = ref('error');
@@ -195,15 +205,20 @@ const notify = (msg, type = 'error') => {
 };
 
 const fetchData = async () => {
+  isLoading.value = true;
   try {
-    const [pRes, fRes] = await Promise.all([
+    const [pRes, fRes, hRes] = await Promise.all([
       axios.get(`${API_URL}/products`),
-      axios.get(`${API_URL}/feedbacks`)
+      axios.get(`${API_URL}/feedbacks`),
+      axios.get(`${API_URL}/hero-images`)
     ]);
     products.value = pRes.data;
     feedbacks.value = fRes.data;
+    heroImages.value = hRes.data;
   } catch (err) {
     console.error("Erro ao carregar dados", err);
+  } finally {
+    isLoading.value = false;
   }
 };
 

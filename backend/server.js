@@ -29,6 +29,7 @@ mongoose.connect(process.env.MONGO_URI)
 // 4. Definição das Rotas de Dados
 app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/feedbacks', require('./routes/feedbackRoutes'));
+app.use('/api/hero-images', require('./routes/heroImageRoutes'));
 
 // 5. Configuração da Porta dinâmica para o Render
 const PORT = process.env.PORT || 3000;
