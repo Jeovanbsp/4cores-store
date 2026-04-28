@@ -1,5 +1,7 @@
 <template>
   <div class="admin-page">
+    <ConfirmModal ref="confirmModal" />
+    
     <header class="admin-nav">
       <div class="nav-brand" @click="$router.push('/')" style="cursor: pointer;">
         <div class="brand-icon">
@@ -270,11 +272,13 @@ import {
   LayoutGridIcon, MessageSquareIcon, UploadCloudIcon, SearchIcon,
   ImageIcon, ChevronUpIcon, ChevronDownIcon
 } from 'lucide-vue-next';
+import ConfirmModal from '../components/ConfirmModal.vue';
 import { API_URL } from '../config';
 
 const productsList = ref([]);
 const feedbacksList = ref([]);
 const heroImages = ref([]);
+const confirmModal = ref(null);
 const editingProduct = ref(null);
 const editingFeedback = ref(null);
 const priceDisplay = ref('');
@@ -429,7 +433,14 @@ const resetProductForm = () => {
 };
 
 const deleteProduct = async (id) => {
-  if (confirm("Excluir item?")) {
+  const confirmed = await confirmModal.value.open({
+    title: 'Excluir Produto',
+    message: 'Tem certeza que deseja excluir este produto? Esta ação não pode ser desfeita.',
+    type: 'danger',
+    confirmText: 'Excluir',
+    cancelText: 'Cancelar'
+  });
+  if (confirmed) {
     await axios.delete(`${API_URL}/products/${id}`);
     fetchData();
   }
@@ -449,7 +460,19 @@ const handleFeedbackSubmit = async () => {
 
 const editFeedback = (f) => { editingFeedback.value = f; Object.assign(feedback, f); };
 const resetFeedbackForm = () => { editingFeedback.value = null; Object.assign(feedback, { name: '', text: '', stars: 5 }); };
-const deleteFeedback = async (id) => { if (confirm("Excluir?")) { await axios.delete(`${API_URL}/feedbacks/${id}`); fetchData(); } };
+const deleteFeedback = async (id) => {
+  const confirmed = await confirmModal.value.open({
+    title: 'Excluir Feedback',
+    message: 'Tem certeza que deseja excluir este feedback?',
+    type: 'danger',
+    confirmText: 'Excluir',
+    cancelText: 'Cancelar'
+  });
+  if (confirmed) {
+    await axios.delete(`${API_URL}/feedbacks/${id}`);
+    fetchData();
+  }
+};
 
 // Hero Image functions
 const handleHeroImageUpload = (e) => {
@@ -479,7 +502,14 @@ const handleHeroImageSubmit = async () => {
 };
 
 const deleteHeroImage = async (id) => {
-  if (confirm("Excluir imagem de destaque?")) {
+  const confirmed = await confirmModal.value.open({
+    title: 'Excluir Imagem',
+    message: 'Tem certeza que deseja excluir esta imagem de destaque?',
+    type: 'danger',
+    confirmText: 'Excluir',
+    cancelText: 'Cancelar'
+  });
+  if (confirmed) {
     try {
       await axios.delete(`${API_URL}/hero-images/${id}`);
       fetchData();
