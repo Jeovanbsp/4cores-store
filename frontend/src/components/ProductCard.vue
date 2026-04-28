@@ -35,6 +35,9 @@
       <span class="category-tag" :class="product.category">
         {{ product.category === 'aluguel' ? 'Aluguel' : 'Venda' }}
       </span>
+      <div v-if="product.tags && product.tags.length" class="tags-overlay">
+        <span v-for="tag in product.tags" :key="tag" class="custom-tag">{{ tag }}</span>
+      </div>
     </div>
 
     <div class="content">
@@ -289,4 +292,7 @@ h4 { margin: 0; font-size: 1.1rem; color: #1e293b; font-weight: 700; }
   transition: background 0.2s, color 0.2s;
 }
 .btn-share:hover { background: #25d366; color: white; }
+
+.tags-overlay { position: absolute; top: 10px; left: 10px; right: 10px; display: flex; flex-wrap: wrap; gap: 6px; z-index: 5; }
+.custom-tag { background: linear-gradient(135deg, #7c3aed, #a855f7); color: white; font-size: 0.65rem; font-weight: 700; padding: 4px 10px; border-radius: 12px; text-transform: uppercase; }
 </style>

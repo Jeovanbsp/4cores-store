@@ -60,6 +60,22 @@
               ></textarea>
             </div>
 
+            <div class="input-group">
+              <label>Tags</label>
+              <div class="tags-selector">
+                <button
+                  v-for="tag in availableTags"
+                  :key="tag"
+                  type="button"
+                  class="tag-btn"
+                  :class="{ active: product.tags.includes(tag) }"
+                  @click="toggleTag(tag)"
+                >
+                  {{ tag }}
+                </button>
+              </div>
+            </div>
+
             <div class="input-row">
               <div class="input-group">
                 <label>Categoria</label>
@@ -304,8 +320,20 @@ const product = reactive({
   images: [], 
   description: '',
   visible: true,
-  soldOut: false
+  soldOut: false,
+  tags: []
 });
+
+const availableTags = ['Virtual', 'Digital', 'Combo', 'Pago', 'Novo', 'Promoção', 'Edição Limitada'];
+
+const toggleTag = (tag) => {
+  const idx = product.tags.indexOf(tag);
+  if (idx > -1) {
+    product.tags.splice(idx, 1);
+  } else {
+    product.tags.push(tag);
+  }
+};
 
 const onPriceInput = (e) => {
   let raw = e.target.value.replace(/[^\d,]/g, '').replace(',', '.');
@@ -423,7 +451,8 @@ const editProduct = (p) => {
     ...p, 
     visible: p.visible ?? true, 
     description: p.description ?? '',
-    soldOut: p.soldOut ?? false
+    soldOut: p.soldOut ?? false,
+    tags: p.tags ?? []
   });
   priceDisplay.value = formatPriceDisplay(p.price);
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -435,7 +464,8 @@ const resetProductForm = () => {
   Object.assign(product, { 
     name: '', topic: '', price: null, 
     category: 'venda', displayMode: 'single', images: [], 
-    description: '', visible: true, soldOut: false
+    description: '', visible: true, soldOut: false,
+  tags: []
   });
 };
 
@@ -728,4 +758,10 @@ input:focus, select:focus, textarea:focus { border-color: #E30613; outline: none
 .hero-actions { display: flex; gap: 2px; }
 .hero-actions .btn-icon { padding: 4px; }
 .list-empty.small { padding: 12px; font-size: 0.8rem; }
+
+/* Tags Selector */
+.tags-selector { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag-btn { padding: 8px 14px; border: 2px solid #e2e8f0; border-radius: 20px; background: white; font-weight: 600; font-size: 0.85rem; color: #64748b; cursor: pointer; transition: all 0.2s; }
+.tag-btn:hover { border-color: #E30613; color: #E30613; }
+.tag-btn.active { background: #E30613; color: white; border-color: #E30613; }
 </style>
