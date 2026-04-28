@@ -362,15 +362,24 @@ const filteredAdminProducts = computed(() => {
 
 const fetchData = async () => {
   try {
+    const token = localStorage.getItem('4cores_token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    
     const [pRes, fRes, hRes] = await Promise.all([
-      axios.get(`${API_URL}/products`),
-      axios.get(`${API_URL}/feedbacks`),
-      axios.get(`${API_URL}/hero-images`)
+      axios.get(`${API_URL}/products`, { headers }),
+      axios.get(`${API_URL}/feedbacks`, { headers }),
+      axios.get(`${API_URL}/hero-images`, { headers })
     ]);
     productsList.value = pRes.data;
     feedbacksList.value = fRes.data;
     heroImages.value = hRes.data;
-  } catch (err) { console.error(err); }
+  } catch (err) { 
+    console.error("Erro ao carregar dados:", err);
+    if (err.response?.status === 401) {
+      console.log("Token expirado - removendo...");
+      localStorage.removeItem('4cores_token');
+    }
+  }
 };
 
 const handleFileUpload = (e) => {
