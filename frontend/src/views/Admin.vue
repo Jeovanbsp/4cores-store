@@ -1,6 +1,7 @@
 <template>
   <div class="admin-page">
     <ConfirmModal ref="confirmModal" />
+    <ToastNotification ref="toast" />
     
     <header class="admin-nav">
       <div class="nav-brand" @click="$router.push('/')" style="cursor: pointer;">
@@ -273,12 +274,14 @@ import {
   ImageIcon, ChevronUpIcon, ChevronDownIcon
 } from 'lucide-vue-next';
 import ConfirmModal from '../components/ConfirmModal.vue';
+import ToastNotification from '../components/ToastNotification.vue';
 import { API_URL } from '../config';
 
 const productsList = ref([]);
 const feedbacksList = ref([]);
 const heroImages = ref([]);
 const confirmModal = ref(null);
+const toast = ref(null);
 const editingProduct = ref(null);
 const editingFeedback = ref(null);
 const priceDisplay = ref('');
@@ -402,12 +405,16 @@ const handleProductSubmit = async () => {
     const payload = { ...product };
     if (editingProduct.value) {
       await axios.put(`${API_URL}/products/${editingProduct.value._id}`, payload);
+      toast.value?.showToast('Produto atualizado com sucesso!', 'success');
     } else {
       await axios.post(`${API_URL}/products`, payload);
+      toast.value?.showToast('Produto criado com sucesso!', 'success');
     }
     resetProductForm();
     fetchData();
-  } catch (err) { alert("Erro ao salvar produto."); }
+  } catch (err) { 
+    toast.value?.showToast('Erro ao salvar produto.', 'error'); 
+  }
 };
 
 const editProduct = (p) => {
@@ -442,6 +449,7 @@ const deleteProduct = async (id) => {
   });
   if (confirmed) {
     await axios.delete(`${API_URL}/products/${id}`);
+    toast.value?.showToast('Produto excluído!', 'success');
     fetchData();
   }
 };
@@ -450,12 +458,16 @@ const handleFeedbackSubmit = async () => {
   try {
     if (editingFeedback.value) {
       await axios.put(`${API_URL}/feedbacks/${editingFeedback.value._id}`, feedback);
+      toast.value?.showToast('Feedback atualizado!', 'success');
     } else {
       await axios.post(`${API_URL}/feedbacks`, feedback);
+      toast.value?.showToast('Feedback adicionado!', 'success');
     }
     resetFeedbackForm();
     fetchData();
-  } catch (err) { console.error(err); }
+  } catch (err) { 
+    toast.value?.showToast('Erro ao salvar feedback.', 'error'); 
+  }
 };
 
 const editFeedback = (f) => { editingFeedback.value = f; Object.assign(feedback, f); };
@@ -470,6 +482,7 @@ const deleteFeedback = async (id) => {
   });
   if (confirmed) {
     await axios.delete(`${API_URL}/feedbacks/${id}`);
+    toast.value?.showToast('Feedback excluído!', 'success');
     fetchData();
   }
 };
@@ -497,8 +510,11 @@ const handleHeroImageSubmit = async () => {
     heroImagePreview.value = null;
     heroImageForm.altText = '';
     heroImageForm.link = '';
+    toast.value?.showToast('Imagem adicionada ao carrossel!', 'success');
     fetchData();
-  } catch (err) { console.error(err); }
+  } catch (err) { 
+    toast.value?.showToast('Erro ao adicionar imagem.', 'error'); 
+  }
 };
 
 const deleteHeroImage = async (id) => {
@@ -512,8 +528,11 @@ const deleteHeroImage = async (id) => {
   if (confirmed) {
     try {
       await axios.delete(`${API_URL}/hero-images/${id}`);
+      toast.value?.showToast('Imagem removida!', 'success');
       fetchData();
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+      toast.value?.showToast('Erro ao remover imagem.', 'error'); 
+    }
   }
 };
 
@@ -524,8 +543,11 @@ const moveHeroUp = async (index) => {
   const ids = newOrder.map(img => img._id);
   try {
     await axios.post(`${API_URL}/hero-images/reorder`, { ids });
+    toast.value?.showToast('Ordem atualizada!', 'success');
     fetchData();
-  } catch (err) { console.error(err); }
+  } catch (err) { 
+    toast.value?.showToast('Erro ao reordenar.', 'error'); 
+  }
 };
 
 const moveHeroDown = async (index) => {
@@ -535,8 +557,11 @@ const moveHeroDown = async (index) => {
   const ids = newOrder.map(img => img._id);
   try {
     await axios.post(`${API_URL}/hero-images/reorder`, { ids });
+    toast.value?.showToast('Ordem atualizada!', 'success');
     fetchData();
-  } catch (err) { console.error(err); }
+  } catch (err) { 
+    toast.value?.showToast('Erro ao reordenar.', 'error'); 
+  }
 };
 
 onMounted(fetchData);
